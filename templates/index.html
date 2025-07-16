@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Disney Search Pro</title>
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary-color: #8b5cf6;
+            --accent-color: #06b6d4;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+            --dark-bg: #0f172a;
+            --dark-card: #1e293b;
+            --dark-border: #334155;
+            --light-text: #f8fafc;
+            --gray-text: #94a3b8;
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--dark-bg) 0%, #1e1b4b 100%);
+            color: var(--light-text);
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Fondo animado */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('/static/background.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.05;
+            z-index: -2;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 40% 80%, rgba(6, 182, 212, 0.1) 0%, transparent 50%);
+            z-index: -1;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(1deg); }
+        }
+
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--dark-bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            color: var(--light-text);
+        }
+
+        .loading-spinner {
+            width: 80px;
+            height: 80px;
+            border: 4px solid rgba(99, 102, 241, 0.2);
+            border-radius: 50%;
+            border-top: 4px solid var(--primary-color);
+            animation: spin 1s linear infinite;
+            margin-bottom: 24px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 1.25rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .loading-subtext {
+            font-size: 0.875rem;
+            color: var(--gray-text);
+        }
+
+        /* Main App */
+        .main-app {
+            display: none;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            backdrop-filter: blur(20px);
+            background: rgba(15, 23, 42, 0.8);
+            border-bottom: 1px solid var(--dark-border);
+            z-index: 1000;
+            padding: 1rem 2rem;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--light-text);
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        /* User Profile */
+        .user-profile {
+            position: relative;
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .user-avatar:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+        }
+
+        .user-dropdown {
+            position: absolute;
+            top: 60px;
+            right: 0;
+            background: var(--dark-card);
+            border: 1px solid var(--dark-border);
+            border-radius: 16px;
+            min-width: 320px;
+            box-shadow: var(--shadow-xl);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 1001;
+        }
+
+        .user-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--dark-border);
+            text-align: center;
+        }
+
+        .dropdown-avatar {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .dropdown-name {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .dropdown-id {
+            font-size: 0.875rem;
+            color: var(--gray-text);
+            font-family: 'Monaco', 'Menlo', monospace;
+        }
+
+        .dropdown-content {
+            padding: 20px;
+        }
+
+        .emails-section h4 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--gray-text);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .emails-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .email-item {
+            padding: 12px 16px;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 0.875rem;
+            font-family: 'Monaco', 'Menlo', monospace;
+            word-break: break-all;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .email-item:hover {
+            background: rgba(99, 102, 241, 0.2);
+            border-color: rgba(99, 102, 241, 0.4);
+            transform: translateX(4px);
+        }
+
+        .email-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .no-emails {
+            text-align: center;
+            color: var(--gray-text);
+            font-style: italic;
+            padding: 40px 20px;
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, var(--error-color), #dc2626);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.875rem;
+        }
+
+        .logout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-top: 90px;
+            padding: 3rem 2rem;
+            min-height: calc(100vh - 90px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Search Container */
+        .search-container {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--dark-border);
+            border-radius: 24px;
+            padding: 3rem;
+            box-shadow: var(--shadow-xl);
+            min-width: 600px;
+            max-width: 800px;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .search-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color), var(--accent-color));
+        }
+
+        .search-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .search-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .search-subtitle {
+            font-size: 1.125rem;
+            color: var(--gray-text);
+            margin-bottom: 8px;
+        }
+
+        .search-description {
+            font-size: 0.875rem;
+            color: var(--gray-text);
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 8px;
+            padding: 12px 16px;
+        }
+
+        /* Search Form */
+        .search-form {
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--light-text);
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 16px 20px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 2px solid var(--dark-border);
+            border-radius: 12px;
+            font-size: 1rem;
+            color: var(--light-text);
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .form-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        .form-input::placeholder {
+            color: var(--gray-text);
+        }
+
+        .search-btn {
+            width: 100%;
+            padding: 16px 24px;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .search-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(99, 102, 241, 0.4);
+        }
+
+        .search-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .search-btn.loading::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s linear infinite;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .search-btn.loading .btn-text {
+            opacity: 0;
+        }
+
+        /* Search Result */
+        .search-result {
+            padding: 20px;
+            border-radius: 12px;
+            text-align: left;
+            font-size: 1rem;
+            font-weight: 500;
+            margin-top: 20px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+            border: 1px solid;
+        }
+
+        .search-result.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .search-result.success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .search-result.error {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error-color);
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .search-result.warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+
+        .search-result.info {
+            background: rgba(59, 130, 246, 0.1);
+            color: #60a5fa;
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        /* Disney Code Result */
+        .disney-result {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 20px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+        }
+
+        .disney-result.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .disney-result-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--success-color);
+        }
+
+        .disney-code {
+            background: rgba(15, 23, 42, 0.8);
+            border: 2px solid var(--success-color);
+            border-radius: 8px;
+            padding: 16px 20px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-align: center;
+            color: var(--light-text);
+            margin-bottom: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .disney-code:hover {
+            background: rgba(15, 23, 42, 0.9);
+            transform: scale(1.02);
+        }
+
+        .disney-details {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 8px 16px;
+            font-size: 0.875rem;
+        }
+
+        .disney-label {
+            color: var(--gray-text);
+            font-weight: 600;
+        }
+
+        .disney-value {
+            color: var(--light-text);
+            word-break: break-all;
+        }
+
+        /* Statistics Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid var(--dark-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-color);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+            font-size: 1.5rem;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: var(--light-text);
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--gray-text);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header {
+                padding: 1rem;
+            }
+
+            .header-content {
+                gap: 1rem;
+            }
+
+            .logo {
+                font-size: 1.25rem;
+            }
+
+            .logo-icon {
+                width: 35px;
+                height: 35px;
+                font-size: 1.25rem;
+            }
+
+            .user-avatar {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+
+            .user-dropdown {
+                min-width: 280px;
+                right: -10px;
+            }
+
+            .main-content {
+                padding: 2rem 1rem;
+                margin-top: 80px;
+            }
+
+            .search-container {
+                min-width: auto;
+                width: 100%;
+                padding: 2rem 1.5rem;
+            }
+
+            .search-title {
+                font-size: 2rem;
+            }
+
+            .search-subtitle {
+                font-size: 1rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+            }
+
+            .stat-card {
+                padding: 1rem;
+            }
+
+            .stat-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 1.25rem;
+            }
+
+            .stat-number {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Scrollbar */
+        .emails-list::-webkit-scrollbar,
+        .user-dropdown::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .emails-list::-webkit-scrollbar-track,
+        .user-dropdown::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 3px;
+        }
+
+        .emails-list::-webkit-scrollbar-thumb,
+        .user-dropdown::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.5);
+            border-radius: 3px;
+        }
+
+        .emails-list::-webkit-scrollbar-thumb:hover,
+        .user-dropdown::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.7);
+        }
+
+        /* Animations */
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .search-container {
+            animation: slideInUp 0.6s ease-out;
+        }
+
+        .stat-card {
+            animation: slideInUp 0.6s ease-out;
+        }
+
+        .stat-card:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .stat-card:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+
+        .stat-card:nth-child(4) {
+            animation-delay: 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loading-screen">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">🔐 Verificando autenticación</div>
+        <div class="loading-subtext">Conectando con el sistema...</div>
+    </div>
+
+    <!-- Main Application -->
+    <div class="main-app" id="main-app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon">🏰</div>
+                    <span>Disney Search Pro</span>
+                </div>
+                
+                <div class="user-profile">
+                    <div class="user-avatar" id="user-avatar">
+                        👤
+                    </div>
+                    
+                    <div class="user-dropdown" id="user-dropdown">
+                        <div class="dropdown-header">
+                            <div class="dropdown-avatar">👤</div>
+                            <div class="dropdown-name" id="user-name">Usuario</div>
+                            <div class="dropdown-id" id="user-id">ID: ...</div>
+                        </div>
+                        <div class="dropdown-content">
+                            <div class="emails-section">
+                                <h4>📧 Emails Asignados (<span id="emails-count">0</span>)</h4>
+                                <div class="emails-list" id="emails-list">
+                                    <div class="no-emails">Cargando emails...</div>
+                                </div>
+                            </div>
+                            <button class="logout-btn" id="logout-btn">🔓 Cerrar Sesión</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="search-container">
+                <!-- Statistics -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">📧</div>
+                        <div class="stat-number" id="stat-emails">0</div>
+                        <div class="stat-label">Emails Asignados</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🏰</div>
+                        <div class="stat-number" id="stat-searches">0</div>
+                        <div class="stat-label">Búsquedas Disney</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⚡</div>
+                        <div class="stat-number" id="stat-status">ON</div>
+                        <div class="stat-label">Estado del Sistema</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">👑</div>
+                        <div class="stat-number" id="stat-role">USER</div>
+                        <div class="stat-label">Rol de Usuario</div>
+                    </div>
+                </div>
+
+                <!-- Search Section -->
+                <div class="search-header">
+                    <h1 class="search-title">🏰 Búsqueda Disney</h1>
+                    <p class="search-subtitle">Encuentra códigos Disney automáticamente</p>
+                    <div class="search-description" id="search-description">
+                        🔍 <strong>Busca códigos Disney Plus, Household y OTP</strong> en emails de los últimos 2 días. También puedes usar <code>/check email@dominio.com</code> en Telegram.
+                    </div>
+                </div>
+                
+                <form class="search-form" id="search-form">
+                    <div class="form-group">
+                        <label class="form-label" for="email-input">📧 Email para buscar códigos Disney</label>
+                        <input 
+                            type="email" 
+                            class="form-input" 
+                            id="email-input" 
+                            placeholder="ejemplo@dominio.com"
+                            required
+                            autocomplete="off"
+                        >
+                    </div>
+                    
+                    <button type="submit" class="search-btn" id="search-btn">
+                        <span class="btn-text">🏰 Buscar Códigos Disney</span>
+                    </button>
+                </form>
+
+                <div class="search-result" id="search-result"></div>
+                <div class="disney-result" id="disney-result"></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Variables globales
+        let csrfToken = null;
+        let userEmails = [];
+        let userEmailsLowercase = []; // NUEVA: versión normalizada para comparaciones
+        let currentUser = null;
+        let searchCount = 0;
+
+        // Inicializar aplicación
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Iniciando Disney Search Pro Dashboard...');
+            initializeApp();
+        });
+
+        // Función principal de inicialización
+        async function initializeApp() {
+            try {
+                await checkAuthentication();
+                await getCSRFToken();
+                await loadUserData();
+                setupEventListeners();
+                updateStatistics();
+                updateSearchDescription();
+                
+                document.getElementById('loading-screen').style.display = 'none';
+                document.getElementById('main-app').style.display = 'block';
+                
+                console.log('✅ Disney Search Pro Dashboard inicializado correctamente');
+            } catch (error) {
+                console.error('❌ Error inicializando dashboard:', error);
+                window.location.href = '/login';
+            }
+        }
+
+        // Verificar autenticación
+        async function checkAuthentication() {
+            try {
+                const response = await fetch('/api/auth/check', {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    throw new Error('No autenticado');
+                }
+
+                const data = await response.json();
+                currentUser = data.user;
+                
+                console.log('✅ Usuario autenticado:', currentUser.telegramId);
+            } catch (error) {
+                console.error('❌ Error verificando autenticación:', error);
+                throw error;
+            }
+        }
+
+        // Obtener token CSRF
+        async function getCSRFToken() {
+            try {
+                const response = await fetch('/api/csrf-token', {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error obteniendo CSRF token');
+                }
+
+                const data = await response.json();
+                csrfToken = data.csrfToken;
+                
+                console.log('✅ CSRF token obtenido');
+            } catch (error) {
+                console.error('❌ Error obteniendo CSRF token:', error);
+                throw error;
+            }
+        }
+
+        // Cargar datos del usuario - VERSIÓN ACTUALIZADA CON NORMALIZACIÓN
+        async function loadUserData() {
+            try {
+                const response = await fetch('/api/user/emails', {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error cargando emails');
+                }
+
+                const data = await response.json();
+                userEmails = data.emails;
+                
+                // ✅ CORRECCIÓN: Crear versión normalizada para comparaciones case-insensitive
+                userEmailsLowercase = userEmails.map(email => email.toLowerCase());
+                
+                // Guardar información sobre el tipo de acceso
+                window.userAccessInfo = {
+                    accessType: data.access_type || 'unknown',
+                    message: data.message || '',
+                    emailCount: userEmails.length
+                };
+                
+                updateUserInterface();
+                
+                console.log('✅ Datos del usuario cargados - Tipo de acceso:', window.userAccessInfo.accessType);
+                console.log('📧 Emails normalizados para comparación:', userEmailsLowercase.length);
+            } catch (error) {
+                console.error('❌ Error cargando datos del usuario:', error);
+                throw error;
+            }
+        }
+
+        // Actualizar interfaz de usuario - VERSIÓN MEJORADA PARA ADMINS
+        function updateUserInterface() {
+            // Actualizar información del usuario
+            const userName = currentUser.username || currentUser.firstName || 'Usuario';
+            document.getElementById('user-name').textContent = userName;
+            document.getElementById('user-id').textContent = `ID: ${currentUser.telegramId}`;
+            
+            // Actualizar contador de emails según el tipo de acceso
+            let emailCount = 0;
+            let emailsDisplayText = '';
+            
+            const accessInfo = window.userAccessInfo || {};
+            
+            switch (accessInfo.accessType) {
+                case 'super_admin':
+                    emailCount = 'ALL';
+                    emailsDisplayText = 'Super Admin: Acceso total a todos los emails';
+                    break;
+                case 'admin_restricted':
+                    emailCount = userEmails.length;
+                    emailsDisplayText = `Admin: Solo ${emailCount} emails asignados específicamente`;
+                    break;
+                case 'free_access':
+                    emailCount = 'FREE';
+                    emailsDisplayText = 'Usuario: Acceso libre a todos los emails';
+                    break;
+                case 'user_restricted':
+                    emailCount = userEmails.length;
+                    emailsDisplayText = `Usuario: ${emailCount} emails asignados`;
+                    break;
+                default:
+                    emailCount = userEmails.length;
+                    emailsDisplayText = `${emailCount} emails disponibles`;
+            }
+            
+            document.getElementById('emails-count').textContent = emailCount;
+            
+            // Actualizar lista de emails con restricciones específicas
+            const emailsList = document.getElementById('emails-list');
+            
+            if (accessInfo.accessType === 'super_admin') {
+                emailsList.innerHTML = '<div class="no-emails">🌟 Super Administrador: Puedes usar cualquier email</div>';
+            } else if (accessInfo.accessType === 'free_access') {
+                emailsList.innerHTML = '<div class="no-emails">🔓 Acceso libre: Puedes usar cualquier email</div>';
+            } else if (userEmails.length === 0) {
+                let restrictionText = '';
+                if (accessInfo.accessType === 'admin_restricted') {
+                    restrictionText = '⚠️ Admin sin emails: Solo los super administradores pueden asignarte emails específicos';
+                } else {
+                    restrictionText = 'No tienes emails asignados. Contacta al administrador.';
+                }
+                emailsList.innerHTML = `<div class="no-emails">${restrictionText}</div>`;
+            } else {
+                let restrictionNote = '';
+                if (accessInfo.accessType === 'admin_restricted') {
+                    restrictionNote = '<div style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 6px; padding: 10px; margin-bottom: 12px; font-size: 0.75rem; color: #f59e0b; font-weight: 600;">🛡️ ADMINISTRADOR: Solo puedes usar estos emails específicos asignados a tu cuenta</div>';
+                } else if (accessInfo.accessType === 'user_restricted') {
+                    restrictionNote = '<div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 6px; padding: 8px; margin-bottom: 12px; font-size: 0.75rem; color: #60a5fa;">📧 Solo puedes usar estos emails asignados</div>';
+                }
+                
+                emailsList.innerHTML = restrictionNote + userEmails.map(email => 
+                    `<div class="email-item" onclick="fillEmailInput('${email}')" title="Click para usar en búsqueda">${email}</div>`
+                ).join('');
+            }
+        }
+
+        // Actualizar estadísticas - VERSIÓN MEJORADA PARA ADMINS
+        function updateStatistics() {
+            const accessInfo = window.userAccessInfo || {};
+            
+            // Emails con información específica del tipo de acceso
+            switch (accessInfo.accessType) {
+                case 'super_admin':
+                    document.getElementById('stat-emails').textContent = 'ALL';
+                    break;
+                case 'admin_restricted':
+                    document.getElementById('stat-emails').textContent = userEmails.length;
+                    break;
+                case 'free_access':
+                    document.getElementById('stat-emails').textContent = 'FREE';
+                    break;
+                default:
+                    document.getElementById('stat-emails').textContent = userEmails.length;
+            }
+            
+            // Búsquedas
+            document.getElementById('stat-searches').textContent = searchCount;
+            
+            // Estado
+            document.getElementById('stat-status').textContent = 'ON';
+            
+            // Rol con más detalles específicos
+            let role = 'USER';
+            if (currentUser.isSuperAdmin) {
+                role = 'SUPER';
+            } else if (currentUser.isAdmin) {
+                role = 'ADMIN';
+            } else if (currentUser.free_access) {
+                role = 'FREE';
+            }
+            document.getElementById('stat-role').textContent = role;
+        }
+
+        // Actualizar descripción según el tipo de acceso específico
+        function updateSearchDescription() {
+            const searchDescription = document.getElementById('search-description');
+            const accessInfo = window.userAccessInfo || {};
+            
+            let descriptionText = '';
+            
+            switch (accessInfo.accessType) {
+                case 'super_admin':
+                    descriptionText = '🔍 <strong>Super Administrador:</strong> Busca códigos Disney Plus, Household y OTP en cualquier email. También puedes usar <code>/check email@dominio.com</code> en Telegram.';
+                    break;
+                case 'admin_restricted':
+                    descriptionText = `🔍 <strong>Administrador Restringido:</strong> Busca códigos Disney Plus, Household y OTP solo en tus ${userEmails.length} emails asignados específicamente. También puedes usar <code>/check email@dominio.com</code> en Telegram.`;
+                    break;
+                case 'free_access':
+                    descriptionText = '🔍 <strong>Acceso Libre:</strong> Busca códigos Disney Plus, Household y OTP en cualquier email. También puedes usar <code>/check email@dominio.com</code> en Telegram.';
+                    break;
+                case 'user_restricted':
+                    descriptionText = `🔍 <strong>Usuario:</strong> Busca códigos Disney Plus, Household y OTP en tus ${userEmails.length} emails asignados. También puedes usar <code>/check email@dominio.com</code> en Telegram.`;
+                    break;
+                default:
+                    descriptionText = '🔍 <strong>Busca códigos Disney Plus, Household y OTP</strong> en emails asignados a ti. También puedes usar <code>/check email@dominio.com</code> en Telegram.';
+            }
+            
+            searchDescription.innerHTML = descriptionText;
+        }
+
+        // Configurar event listeners
+        function setupEventListeners() {
+            // Toggle dropdown
+            const userAvatar = document.getElementById('user-avatar');
+            const userDropdown = document.getElementById('user-dropdown');
+            
+            userAvatar.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const isOpen = userDropdown.classList.contains('show');
+                
+                if (isOpen) {
+                    userDropdown.classList.remove('show');
+                } else {
+                    userDropdown.classList.add('show');
+                }
+            });
+
+            // Cerrar dropdown al hacer clic fuera
+            document.addEventListener('click', function(event) {
+                if (!userAvatar.contains(event.target) && !userDropdown.contains(event.target)) {
+                    userDropdown.classList.remove('show');
+                }
+            });
+
+            // Formulario de búsqueda
+            const searchForm = document.getElementById('search-form');
+            searchForm.addEventListener('submit', handleDisneySearch);
+
+            // Botón de logout
+            const logoutBtn = document.getElementById('logout-btn');
+            logoutBtn.addEventListener('click', handleLogout);
+
+            // Input de búsqueda - limpiar resultado al escribir
+            const emailInput = document.getElementById('email-input');
+            emailInput.addEventListener('input', function() {
+                hideSearchResult();
+                hideDisneyResult();
+            });
+        }
+
+        // Llenar input con email seleccionado
+        function fillEmailInput(email) {
+            document.getElementById('email-input').value = email;
+            document.getElementById('user-dropdown').classList.remove('show');
+            hideSearchResult();
+            hideDisneyResult();
+        }
+
+        // Manejar búsqueda Disney - VERSIÓN CORREGIDA CON CASE-INSENSITIVE COMPARISON
+        async function handleDisneySearch(event) {
+            event.preventDefault();
+            
+            const emailInput = document.getElementById('email-input');
+            const searchBtn = document.getElementById('search-btn');
+            const email = emailInput.value.trim();
+
+            if (!email) {
+                showSearchResult('error', '❌ Por favor ingresa un email válido');
+                return;
+            }
+
+            // Validación de email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showSearchResult('error', '❌ El formato del email no es válido');
+                return;
+            }
+
+            // ✅ CORRECCIÓN PRINCIPAL: Validación case-insensitive para restricciones
+            const accessInfo = window.userAccessInfo || {};
+            
+            if (accessInfo.accessType === 'admin_restricted' || accessInfo.accessType === 'user_restricted') {
+                const emailLowercase = email.toLowerCase();
+                
+                // Usar la lista normalizada para comparación case-insensitive
+                if (!userEmailsLowercase.includes(emailLowercase)) {
+                    let errorMessage = '';
+                    if (accessInfo.accessType === 'admin_restricted') {
+                        errorMessage = `❌ Como administrador, solo puedes usar emails asignados específicamente a tu cuenta.\n\n✅ Tus emails disponibles: ${userEmails.join(', ')}`;
+                    } else {
+                        errorMessage = `❌ Solo puedes usar emails asignados a tu cuenta.\n\n✅ Tus emails disponibles: ${userEmails.join(', ')}`;
+                    }
+                    showSearchResult('error', errorMessage);
+                    return;
+                }
+                
+                // ✅ Log de depuración para case sensitivity
+                console.log('🔍 Validación case-insensitive:');
+                console.log('  - Email ingresado:', email);
+                console.log('  - Email normalizado:', emailLowercase);
+                console.log('  - Lista normalizada:', userEmailsLowercase);
+                console.log('  - Encontrado:', userEmailsLowercase.includes(emailLowercase));
+            }
+
+            // Mostrar estado de carga
+            searchBtn.disabled = true;
+            searchBtn.classList.add('loading');
+            hideSearchResult();
+            hideDisneyResult();
+
+            try {
+                console.log(`🏰 Iniciando búsqueda Disney para: ${email} (Tipo acceso: ${accessInfo.accessType})`);
+                
+                const response = await fetch('/api/search-disney', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': csrfToken
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ 
+                        email: email,
+                        csrfToken: csrfToken 
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Error en la búsqueda');
+                }
+
+                const data = await response.json();
+                
+                searchCount++;
+                updateStatistics();
+                
+                if (data.found && data.result) {
+                    // Código Disney encontrado
+                    showDisneyResult(data.result);
+                } else {
+                    // No se encontró código
+                    showSearchResult('info', '🔍 No se encontraron códigos Disney en los últimos 2 días para este email.');
+                }
+
+            } catch (error) {
+                console.error('❌ Error en búsqueda Disney:', error);
+                
+                // Mostrar error específico según el tipo de usuario
+                let errorMessage = error.message;
+                if (errorMessage.includes('Sin permisos')) {
+                    // Error de permisos específico
+                    showSearchResult('error', errorMessage);
+                } else {
+                    // Error genérico
+                    showSearchResult('error', `❌ Error: ${errorMessage}`);
+                }
+            } finally {
+                searchBtn.disabled = false;
+                searchBtn.classList.remove('loading');
+            }
+        }
+
+        // Mostrar resultado Disney
+        function showDisneyResult(result) {
+            const resultDiv = document.getElementById('disney-result');
+            
+            const typeNames = {
+                'disney': '🏰 Disney Plus',
+                'disney_household': '🏠 Disney Household',
+                'disney_mydisney': '🎭 My Disney OTP'
+            };
+            
+            const typeName = typeNames[result.type] || '✨ Disney';
+            
+            resultDiv.innerHTML = `
+                <div class="disney-result-header">
+                    <span>${typeName}</span>
+                    <span>Código Encontrado</span>
+                </div>
+                <div class="disney-code" onclick="copyToClipboard('${result.code}')" title="Click para copiar">
+                    ${result.code}
+                </div>
+                <div class="disney-details">
+                    <span class="disney-label">📧 Email:</span>
+                    <span class="disney-value">${result.email}</span>
+                    <span class="disney-label">📅 Fecha:</span>
+                    <span class="disney-value">${result.date}</span>
+                    <span class="disney-label">📋 Asunto:</span>
+                    <span class="disney-value">${result.subject}</span>
+                    <span class="disney-label">🏷️ Tipo:</span>
+                    <span class="disney-value">${typeName}</span>
+                </div>
+            `;
+            
+            resultDiv.classList.add('show');
+            
+            // Auto-scroll al resultado
+            setTimeout(() => {
+                resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 300);
+        }
+
+        // Ocultar resultado Disney
+        function hideDisneyResult() {
+            const resultDiv = document.getElementById('disney-result');
+            resultDiv.classList.remove('show');
+        }
+
+        // Mostrar resultado de búsqueda
+        function showSearchResult(type, message) {
+            const resultDiv = document.getElementById('search-result');
+            resultDiv.className = `search-result ${type}`;
+            resultDiv.textContent = message;
+            resultDiv.classList.add('show');
+
+            // Auto-ocultar después de 8 segundos
+            setTimeout(() => {
+                hideSearchResult();
+            }, 8000);
+        }
+
+        // Ocultar resultado de búsqueda
+        function hideSearchResult() {
+            const resultDiv = document.getElementById('search-result');
+            resultDiv.classList.remove('show');
+        }
+
+        // Copiar al portapapeles
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showSearchResult('success', `📋 Código copiado al portapapeles: ${text}`);
+            }).catch(() => {
+                // Fallback para navegadores que no soportan clipboard API
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    showSearchResult('success', `📋 Código copiado: ${text}`);
+                } catch {
+                    showSearchResult('error', '❌ Error al copiar código');
+                }
+                document.body.removeChild(textArea);
+            });
+        }
+
+        // Manejar logout
+        async function handleLogout() {
+            try {
+                const response = await fetch('/api/auth/logout', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    console.log('✅ Logout exitoso');
+                    window.location.href = '/login';
+                } else {
+                    console.error('❌ Error en logout');
+                    showSearchResult('error', '❌ Error cerrando sesión');
+                }
+            } catch (error) {
+                console.error('❌ Error en logout:', error);
+                showSearchResult('error', '❌ Error cerrando sesión');
+            }
+        }
+
+        // Manejar errores globales
+        window.addEventListener('error', function(e) {
+            console.error('❌ Error global:', e.error);
+        });
+
+        window.addEventListener('unhandledrejection', function(e) {
+            console.error('❌ Promise rejection no manejada:', e.reason);
+        });
+    </script>
+</body>
+</html>

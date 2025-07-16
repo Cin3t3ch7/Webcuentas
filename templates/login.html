@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Disney Search Pro</title>
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary-color: #8b5cf6;
+            --accent-color: #06b6d4;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+            --dark-bg: #0f172a;
+            --dark-card: #1e293b;
+            --dark-border: #334155;
+            --light-text: #f8fafc;
+            --gray-text: #94a3b8;
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--dark-bg) 0%, #1e1b4b 100%);
+            color: var(--light-text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Fondo animado */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('/static/background.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.1;
+            z-index: -2;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 40% 80%, rgba(6, 182, 212, 0.1) 0%, transparent 50%);
+            z-index: -1;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(1deg); }
+        }
+
+        .login-container {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--dark-border);
+            border-radius: 24px;
+            padding: 3rem;
+            max-width: 450px;
+            width: 100%;
+            box-shadow: var(--shadow-xl);
+            position: relative;
+            overflow: hidden;
+            animation: slideInUp 0.8s ease-out;
+        }
+
+        .login-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color), var(--accent-color));
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 1.5rem;
+        }
+
+        .logo-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .login-header h1 {
+            color: var(--light-text);
+            font-size: 2rem;
+            margin-bottom: 8px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .login-header p {
+            color: var(--gray-text);
+            font-size: 1rem;
+            margin-bottom: 8px;
+        }
+
+        .login-description {
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 12px;
+            padding: 16px;
+            font-size: 0.875rem;
+            color: var(--gray-text);
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            color: var(--light-text);
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .input-container {
+            position: relative;
+            border: 2px solid var(--dark-border);
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .input-container:focus-within {
+            border-color: var(--primary-color);
+            background: rgba(15, 23, 42, 0.8);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .input-container input {
+            width: 100%;
+            padding: 16px 20px;
+            border: none;
+            background: transparent;
+            color: var(--light-text);
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .input-container input::placeholder {
+            color: var(--gray-text);
+        }
+
+        .input-help {
+            font-size: 0.75rem;
+            color: var(--gray-text);
+            margin-top: 6px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px 24px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn .loading-text {
+            display: none;
+        }
+
+        .btn.loading .normal-text {
+            display: none;
+        }
+
+        .btn.loading .loading-text {
+            display: inline;
+        }
+
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .message {
+            margin-top: 1.5rem;
+            padding: 16px 20px;
+            border-radius: 12px;
+            border-left: 4px solid;
+            backdrop-filter: blur(10px);
+            display: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .message.success {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: var(--success-color);
+            color: var(--success-color);
+        }
+
+        .message.error {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: var(--error-color);
+            color: var(--error-color);
+        }
+
+        .message.info {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: #3b82f6;
+            color: #60a5fa;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--dark-border);
+        }
+
+        .footer p {
+            color: var(--gray-text);
+            font-size: 0.75rem;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .feature-item {
+            text-align: center;
+            padding: 1rem;
+            background: rgba(99, 102, 241, 0.05);
+            border: 1px solid rgba(99, 102, 241, 0.1);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .feature-item:hover {
+            background: rgba(99, 102, 241, 0.1);
+            border-color: rgba(99, 102, 241, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .feature-icon {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+        }
+
+        .feature-text {
+            font-size: 0.75rem;
+            color: var(--gray-text);
+        }
+
+        /* Animaciones */
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .login-container {
+                padding: 2rem 1.5rem;
+            }
+            
+            .login-header h1 {
+                font-size: 1.75rem;
+            }
+
+            .logo-icon {
+                width: 50px;
+                height: 50px;
+                font-size: 1.5rem;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Efectos adicionales */
+        .sparkle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            animation: sparkle 3s ease-in-out infinite;
+        }
+
+        @keyframes sparkle {
+            0%, 100% { opacity: 0; transform: scale(0); }
+            50% { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <div class="logo">
+                <div class="logo-icon">🏰</div>
+            </div>
+            <h1>Disney Search Pro</h1>
+            <p>Sistema de búsqueda de códigos Disney</p>
+            <div class="login-description">
+                🔐 <strong>Acceso seguro</strong> - Ingresa tu ID de Telegram para acceder al sistema de búsqueda de códigos Disney Plus, Household y OTP.
+            </div>
+        </div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="telegramId">🆔 ID de Telegram</label>
+                <div class="input-container">
+                    <input 
+                        type="text" 
+                        id="telegramId" 
+                        name="telegramId" 
+                        placeholder="Ej: 123456789"
+                        required
+                        autocomplete="off"
+                        maxlength="15"
+                    >
+                </div>
+                <div class="input-help">
+                    📱 Tu ID numérico de Telegram (5-15 dígitos)
+                </div>
+            </div>
+
+            <button type="submit" class="btn" id="loginBtn">
+                <span class="normal-text">🔓 Iniciar Sesión</span>
+                <span class="loading-text">
+                    <span class="loading-spinner"></span>
+                    Verificando...
+                </span>
+            </button>
+        </form>
+
+        <div id="message" class="message"></div>
+
+        <div class="features">
+            <div class="feature-item">
+                <div class="feature-icon">🏰</div>
+                <div class="feature-text">Disney Plus</div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">🏠</div>
+                <div class="feature-text">Household</div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">🎭</div>
+                <div class="feature-text">My Disney OTP</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>🔒 Sistema de autenticación segura con Telegram</p>
+        </div>
+    </div>
+
+    <!-- Efectos decorativos -->
+    <div class="sparkle" style="top: 20%; left: 10%; animation-delay: 0s;"></div>
+    <div class="sparkle" style="top: 80%; right: 15%; animation-delay: 1s;"></div>
+    <div class="sparkle" style="top: 60%; left: 85%; animation-delay: 2s;"></div>
+
+    <script>
+        // Variables globales
+        let csrfToken = null;
+        let isLoading = false;
+
+        // Inicializar aplicación
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Iniciando Disney Search Pro Login...');
+            initializeApp();
+        });
+
+        // Función principal de inicialización
+        async function initializeApp() {
+            try {
+                await obtenerCSRFToken();
+                setupEventListeners();
+                await verificarEstadoAuth();
+                
+                console.log('✅ Aplicación inicializada correctamente');
+            } catch (error) {
+                console.error('❌ Error inicializando aplicación:', error);
+                showMessage('error', 'Error inicializando la aplicación. Recarga la página.');
+            }
+        }
+
+    // Obtener token CSRF del servidor
+    async function obtenerCSRFToken() {
+        try {
+            console.log('🔍 Obteniendo token CSRF...');
+            
+            const response = await fetch('/api/csrf-token', {
+                method: 'GET',
+                credentials: 'include' 
+            });
+            if (!response.ok) {
+                throw new Error(`Error HTTP: ${response.status}`);
+            }
+            const data = await response.json();
+            csrfToken = data.csrfToken;
+            
+            console.log('✅ Token CSRF obtenido correctamente');
+        } catch (error) {
+            console.error('❌ Error obteniendo token CSRF:', error);
+            throw new Error('No se pudo obtener el token de seguridad');
+        }
+    }
+
+        // Configurar event listeners
+        function setupEventListeners() {
+            const form = document.getElementById('loginForm');
+            const telegramIdInput = document.getElementById('telegramId');
+
+            form.addEventListener('submit', handleLogin);
+            telegramIdInput.addEventListener('input', handleInputValidation);
+            telegramIdInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !isLoading) {
+                    e.preventDefault();
+                    handleLogin(e);
+                }
+            });
+        }
+
+        // Manejar validación del input en tiempo real
+        function handleInputValidation(e) {
+            const value = e.target.value.replace(/[^0-9]/g, '');
+            e.target.value = value;
+            
+            const container = e.target.parentElement;
+            if (value.length >= 5 && value.length <= 15) {
+                container.style.borderColor = 'var(--success-color)';
+            } else if (value.length > 0) {
+                container.style.borderColor = 'var(--error-color)';
+            } else {
+                container.style.borderColor = 'var(--dark-border)';
+            }
+        }
+
+        // Manejar proceso de login
+        async function handleLogin(e) {
+            e.preventDefault();
+            
+            if (isLoading) {
+                console.log('⏳ Login ya en proceso...');
+                return;
+            }
+            console.log('🔐 Iniciando proceso de login...');
+            
+            const telegramId = document.getElementById('telegramId').value.trim();
+            
+            if (!validateInput(telegramId)) {
+                return;
+            }
+            if (!csrfToken) {
+                console.log('⚠️ No hay token CSRF, reobteniendo...');
+                try {
+                    await obtenerCSRFToken();
+                } catch (error) {
+                    showMessage('error', 'Error de seguridad. Recarga la página.');
+                    return;
+                }
+            }
+
+            setLoading(true);
+
+            try {
+                console.log('📡 Enviando solicitud de login...');
+                
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': csrfToken
+                    },
+                    credentials: 'include', 
+                    body: JSON.stringify({
+                        telegramId: telegramId,
+                        csrfToken: csrfToken
+                    })
+                });
+                console.log('📡 Respuesta recibida:', response.status);
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    console.log('✅ Login exitoso:', data.user.telegramId);
+                    showMessage('success', '🎉 ¡Login exitoso! Redirigiendo al dashboard...');
+                    
+                    setTimeout(() => {
+                        console.log('🔄 Redirigiendo al dashboard...');
+                        window.location.href = '/';
+                    }, 1500);
+                } else {
+                    const errorMessage = data.error || 'Error de autenticación desconocido';
+                    console.log('❌ Error en login:', errorMessage);
+                    showMessage('error', errorMessage);
+                }
+            } catch (error) {
+                console.error('❌ Error de conexión:', error);
+                showMessage('error', 'Error de conexión. Verifica tu internet e inténtalo de nuevo.');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        // Validar entrada del usuario
+        function validateInput(telegramId) {
+            if (!telegramId) {
+                showMessage('error', 'Por favor ingresa tu ID de Telegram');
+                document.getElementById('telegramId').focus();
+                return false;
+            }
+            
+            if (!/^\d+$/.test(telegramId)) {
+                showMessage('error', 'El ID de Telegram solo debe contener números');
+                document.getElementById('telegramId').focus();
+                return false;
+            }
+            
+            if (telegramId.length < 5 || telegramId.length > 15) {
+                showMessage('error', 'El ID de Telegram debe tener entre 5 y 15 dígitos');
+                document.getElementById('telegramId').focus();
+                return false;
+            }
+
+            return true;
+        }
+
+        // Manejar estado de loading
+        function setLoading(loading) {
+            isLoading = loading;
+            const btn = document.getElementById('loginBtn');
+            const input = document.getElementById('telegramId');
+            
+            btn.disabled = loading;
+            input.disabled = loading;
+            
+            if (loading) {
+                btn.classList.add('loading');
+            } else {
+                btn.classList.remove('loading');
+            }
+        }
+
+        // Mostrar mensajes al usuario
+        function showMessage(type, text, duration = 5000) {
+            const messageDiv = document.getElementById('message');
+            
+            messageDiv.className = `message ${type}`;
+            messageDiv.textContent = text;
+            messageDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, duration);
+        }
+
+        // Verificar estado de autenticación
+        async function verificarEstadoAuth() {
+            try {
+                console.log('🔍 Verificando estado de autenticación...');
+                
+                const response = await fetch('/api/auth/check', {
+                    credentials: 'include' 
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('ℹ️ Sesión activa detectada para usuario:', data.user.telegramId);
+                    showMessage('info', 
+                        '🔄 Ya tienes una sesión activa. Puedes continuar o iniciar sesión nuevamente.',
+                        3000
+                    );
+                } else {
+                    console.log('ℹ️ No hay sesión activa');
+                }
+            } catch (error) {
+                console.log('ℹ️ No se pudo verificar el estado de autenticación');
+            }
+        }
+
+        // Manejar errores globales
+        window.addEventListener('error', function(e) {
+            console.error('❌ Error global:', e.error);
+            showMessage('error', 'Error inesperado. Recarga la página si el problema persiste.');
+        });
+
+        window.addEventListener('unhandledrejection', function(e) {
+            console.error('❌ Promise rejection no manejada:', e.reason);
+            showMessage('error', 'Error de conexión. Verifica tu internet.');
+        });
+    </script>
+</body>
+</html>
